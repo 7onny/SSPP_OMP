@@ -1,0 +1,27 @@
+
+--------------Execution Times (seconds)--------------------
+Total Elapsed time: 0.731775
+Total Function times:
+	calcIx: 0
+	calcIy: 0
+	calcIt: 0
+	vels_avg: 0.0481954
+	calc_vels: 0.109031
+	print_ders: 0
+	compute_ders: 0.00605595
+	calc_diff_kernel: 4.52914e-007
+	diff_x: 0.000861901
+	diff_y: 0.00134516
+	diff_t: 0.00134788
+	readfiles: 0.0111798
+	writefiles: 0
+	read_and_smooth3D: 0.0442405
+	convolve_Gaussian: 0.0259028
+	output_velocities: 0.00476378
+	calc_statistics: 0.319056
+	PsiER: 0.511685
+	norm: 0.194508
+	difference: 0.0355993
+	threshold: 0.000265409
+	fmin: 0
+	rearrange: 0.136348
