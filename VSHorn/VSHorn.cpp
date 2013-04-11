@@ -653,7 +653,7 @@ void calc_vels(float vels[PIC_X][PIC_Y][2],float vels1[PIC_X][PIC_Y][2],float Ex
 
 
 #pragma omp parallel for \
-	private(i,j) shared(mag,ave) \
+	private(i,j) shared(mag,ave,alpha) \
 	schedule (static)
 	for(i=startx;i<=endx;i+=step)
 		for(j=starty;j<=endy;j+=step) 
@@ -1216,7 +1216,7 @@ void calc_statistics(float correct_vels[PIC_X][PIC_Y][2],int int_size_x,int int_
 	double launch_time=omp_get_wtime();
 	calc_statistics_count++;
 
-	int full_count,no_full_count,i,j,a,b,total_count;
+	int full_count,no_full_count,i,j,total_count;
 	float sumX2,temp,uva[2],uve[2];
 
 	full_count = no_full_count = total_count = 0;
@@ -1224,10 +1224,15 @@ void calc_statistics(float correct_vels[PIC_X][PIC_Y][2],int int_size_x,int int_
 	(*min_angle) = HUGE;
 	(*max_angle) = -HUGE;
 	(*ave_error) = (*st_dev) = (*density) = 0.0;
+	float aux_error=0.0;
 
-	//omp_set_num_threads(2);
-#pragma omp parallel for \
-	private(i,j) shared(full_count, uve, uva, temp, ave_error, sumX2, min_angle, max_angle) \
+#pragma omp parallel private(i,j,temp, uve, uva)
+{
+	float minA=HUGE;
+	float maxA=-HUGE;
+
+#pragma omp for \
+	reduction(+ : full_count,no_full_count,total_count,aux_error,sumX2) \
 	schedule (static)
 	for(i=n;i<pic_x-n;i++)
 	{
@@ -1239,15 +1244,25 @@ void calc_statistics(float correct_vels[PIC_X][PIC_Y][2],int int_size_x,int int_
 				uve[0] = full_vels[i][j][0]; uve[1] = full_vels[i][j][1];
 				uva[0] = correct_vels[i][j][0]; uva[1] = correct_vels[i][j][1];
 				temp = PsiER(uve,uva);
-				(*ave_error) += temp;
+				aux_error += temp;
 				sumX2 += temp*temp;
-				if(temp < (*min_angle)) (*min_angle) = temp;
-				if(temp > (*max_angle)) (*max_angle) = temp;
+				if(temp < (minA)) (minA) = temp;
+				if(temp > (maxA)) (maxA) = temp;
 			}
 			else no_full_count++;
 			total_count++;
 		}
 	}
+
+#pragma omp critical
+{
+	if(minA<(*min_angle)) (*min_angle)=minA;
+	if(maxA>(*max_angle)) (*max_angle)=maxA;
+}
+
+} //End of parallel section
+
+	(*ave_error)=aux_error;
 
 	if(full_count != 0) (*ave_error) = (*ave_error)/full_count;
 	else (*ave_error) = 0.0;
